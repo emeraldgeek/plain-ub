@@ -1,6 +1,6 @@
 import google.generativeai as genai
 
-from app import Message, extra_config, message
+from app import Message, extra_config, message, Config
 
 
 async def init_task():
@@ -21,10 +21,6 @@ PAST = []
 HISTORY = []
 SPECIFIC_GROUP_ID = [-1001898736703, -1002010754513]
 CONTEXT = []
-if message.chat.id in SPECIFIC_GROUP_ID:
-    CONTEXT = PAST
-else:
-    CONTEXT = HISTORY
 
 @bot.add_cmd(cmd="fh")
 async def fetch_history(bot=bot, message=None):
@@ -39,6 +35,10 @@ async def fetch_history(bot=bot, message=None):
     PAST = json.loads(past_message.text)
     if message is not None:
         await message.reply("Done.")
+    if message.chat.id in SPECIFIC_GROUP_ID:
+        CONTEXT = PAST
+    else:
+        CONTEXT = HISTORY
 
 TEXT_MODEL = genai.GenerativeModel(
     model_name="gemini-pro",
