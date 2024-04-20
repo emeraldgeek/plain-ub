@@ -18,10 +18,10 @@ SAFETY_SETTINGS = [
     {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
 ]
 
-PAST = []
-HISTORY = []
-SPECIFIC_GROUP_ID = [-1001898736703, -1002010754513]
-CONTEXT = "Implore me to update context."
+PAST = "Implore me to update context with _fh."
+HISTORY = "Implore me to update context with _fh."
+SPECIFIC_GROUP_ID = [-1001898736703, -1002010754513, -1001939171299]
+CONTEXT = "Implore me to update context with _fh."
 
 @bot.add_cmd(cmd="fh")
 async def fetch_history(bot=bot, message=None):
