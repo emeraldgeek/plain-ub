@@ -1,11 +1,14 @@
+import json
+import mimetypes
+import os
 import pickle
 from io import BytesIO
 
 from pyrogram import filters
 from pyrogram.enums import ParseMode
 
-from app import BOT, Convo, Message, bot
-from app.plugins.ai.models import TEXT_MODEL, basic_check, get_response_text
+from app import BOT, Convo, Message, bot, Config
+from app.plugins.ai.models import TEXT_MODEL, MEDIA_MODEL, ONEFIVE, basic_check, get_response_text
 
 
 @bot.add_cmd(cmd="ai")
@@ -21,25 +24,25 @@ async def question(bot: BOT, message: Message):
 
     prompt = message.input
 
-    response = await TEXT_MODEL.generate_content_async(prompt)
+    response = await MEDIA_MODEL.generate_content_async(prompt)
 
     response_text = get_response_text(response)
 
     if not isinstance(message, Message):
         await message.edit(
-            text=f"```\n{prompt}```**GEMINI AI**:\n{response_text.strip()}",
+            text=f"```\n{prompt}```**AI**:\n{response_text.strip()}",
             parse_mode=ParseMode.MARKDOWN,
         )
     else:
         await bot.send_message(
             chat_id=message.chat.id,
-            text=f"```\n{prompt}```**GEMINI AI**:\n{response_text.strip()}",
+            text=f"```\n{prompt}```**AI**:\n{response_text.strip()}",
             parse_mode=ParseMode.MARKDOWN,
             reply_to_message_id=message.reply_id or message.id,
         )
 
 
-@bot.add_cmd(cmd="aichat")
+@bot.add_cmd(cmd=["aichat", "rxc"])
 async def ai_chat(bot: BOT, message: Message):
     """
     CMD: AICHAT
@@ -52,14 +55,15 @@ async def ai_chat(bot: BOT, message: Message):
     """
     if not await basic_check(message):
         return
-    chat = TEXT_MODEL.start_chat(history=[])
+    MODEL= ONEFIVE if message.cmd == "rxc" else TEXT_MODEL
+    chat = MODEL.start_chat(history=[])
     try:
         await do_convo(chat=chat, message=message)
     except TimeoutError:
         await export_history(chat, message)
 
 
-@bot.add_cmd(cmd="load_history")
+@bot.add_cmd(cmd=["load_history", "lxc"])
 async def history_chat(bot: BOT, message: Message):
     """
     CMD: LOAD_HISTORY
@@ -82,7 +86,8 @@ async def history_chat(bot: BOT, message: Message):
     doc: BytesIO = (await reply.download(in_memory=True)).getbuffer()  # NOQA
     history = pickle.loads(doc)
     await resp.edit("<i>History Loaded... Resuming chat</i>")
-    chat = TEXT_MODEL.start_chat(history=history)
+    MODEL= ONEFIVE if message.cmd == "lxc" else TEXT_MODEL
+    chat = MODEL.start_chat(history=history)
     try:
         await do_convo(chat=chat, message=message, history=True)
     except TimeoutError:
@@ -96,13 +101,13 @@ async def do_convo(chat, message: Message, history: bool = False):
         client=message._client,
         chat_id=message.chat.id,
         filters=generate_filter(message),
-        timeout=300,
+        timeout=180,
         check_for_duplicates=False,
     ) as convo:
         while True:
             ai_response = await chat.send_message_async(prompt)
             ai_response_text = get_response_text(ai_response)
-            text = f"**GEMINI AI**:\n\n{ai_response_text}"
+            text = f"{ai_response_text}"
             _, prompt_message = await convo.send_message(
                 text=text,
                 reply_to_message_id=reply_to_message_id,
@@ -135,3 +140,73 @@ async def export_history(chat, message: Message):
         await chat.send_message_async("Summarize our Conversation into one line.")
     )
     await bot.send_document(chat_id=message.from_user.id, document=doc, caption=caption)
+
+@bot.add_cmd(cmd=["r","rx"])
+async def reya(bot: BOT, message: Message):
+    """
+    CMD: R
+    INFO: Ask a question to Reya.
+    USAGE: .r How to be strong?
+    """
+    if not (await basic_check(message)):  # fmt:skip
+        return
+    MODEL = MEDIA_MODEL if message.cmd == "r" else ONEFIVE
+    name = "Leaf"
+    replied = message.replied
+
+    if replied:
+        reply_input = f"{replied.from_user.first_name}: {replied.text}"
+
+        if not message.input:
+            prompt = f"{reply_input}"
+        else:
+            prompt = f"{reply_input}\n{name}: {message.input}"
+
+    else:
+        prompt = f"{name}: {message.input}"
+
+    if replied and replied.photo:
+        file = await replied.download(in_memory=True)
+
+        mime_type, _ = mimetypes.guess_type(file.name)
+        if mime_type is None:
+            mime_type = "image/unknown"
+
+        image_blob = glm.Blob(mime_type=mime_type, data=file.getvalue())
+        prompt = (
+            REYA_INSTRUCTIONS
+            + f"Now, about the image : {message.input}"
+        )
+
+        if message.cmd == "rx":
+            convo = ONEFIVE.start_chat(history=[])
+            response = convo.send_message([message.input, image_blob])
+            
+        else:
+            response = await VISION_MODEL.generate_content_async([prompt, image_blob])
+
+    elif replied and (replied.audio or replied.voice):
+        file = await replied.download()
+        audio_file = genai.upload_file(path = file, display_name="Voice Note")
+    
+
+        response = await ONEFIVE.generate_content_async([ message.input, audio_file])
+        response_text = response.text
+        await bot.send_message(
+            chat_id=message.chat.id,
+            text=response_text,
+            parse_mode=ParseMode.MARKDOWN,
+            reply_to_message_id=message.id,
+        )
+
+    else:
+        convo = MODEL.start_chat(history=[])
+        response = convo.send_message(prompt)
+
+    response_text = get_response_text(response)
+    await bot.send_message(
+        chat_id=message.chat.id,
+        text = response_text,
+        parse_mode=ParseMode.MARKDOWN,
+        reply_to_message_id=message.reply_id or message.id,
+    )
