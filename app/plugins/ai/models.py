@@ -21,7 +21,7 @@ SAFETY_SETTINGS = [
 PAST = []
 HISTORY = []
 SPECIFIC_GROUP_ID = [-1001898736703, -1002010754513]
-CONTEXT = "Implore me to update context.'
+CONTEXT = "Implore me to update context."
 
 @bot.add_cmd(cmd="fh")
 async def fetch_history(bot=bot, message=None):
