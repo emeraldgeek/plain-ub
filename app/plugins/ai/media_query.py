@@ -49,33 +49,33 @@ async def photo_query(bot: BOT, message: Message):
     """
     CMD: OCR
     INFO: Ask a question to Gemini AI about replied image.
-    USAGE: .ocr [reply to a photo] explain the image.
+    USAGE: .ocr [reply to a photo] OCR the image.
     """
-    prompt = message.input
+    prompt = "Write the text."
     reply = message.replied
-    message_response = await message.reply("processing... this may take a while")
+    message_response = await message.reply("...")
 
-    if not (prompt and reply and reply.photo):
-        await message_response.edit("Reply to an image and give a prompt.")
+    if not (reply and reply.photo):
+        await message_response.edit("Reply to an image.")
         return
 
     ai_response_text = await handle_photo(prompt, reply)
     await message_response.edit(ai_response_text)
 
 
-@bot.add_cmd(cmd="stt")
+@bot.add_cmd(cmd="ts")
 async def audio_to_text(bot: BOT, message: Message):
     """
-    CMD: STT (Speech To Text)
+    CMD: ts (Speech To Text)
     INFO: Convert Audio files to text.
-    USAGE: .stt [reply to audio file] summarise/transcribe the audio file.
+    USAGE: .ts [reply to audio file] summarise/transcribe the audio file.
     """
-    prompt = message.input
+    prompt = "Transcribe in Hinglish."
     reply = message.replied
     audio = reply.audio or reply.voice
 
-    message_response = await message.reply("processing... this may take a while")
-    if not (prompt and reply and audio):
+    message_response = await message.reply("...")
+    if not (reply and audio):
         await message_response.edit("Reply to an audio file and give a prompt.")
         return
 
@@ -83,16 +83,16 @@ async def audio_to_text(bot: BOT, message: Message):
     await message_response.edit(ai_response_text)
 
 
-@bot.add_cmd(cmd="ocrv")
+@bot.add_cmd(cmd="vx")
 async def video_to_text(bot: BOT, message: Message):
     """
-    CMD: OCRV
+    CMD: vx
     INFO: Convert Video info to text.
-    USAGE: .ocrv [reply to video file] summarise the video file.
+    USAGE: .vx [reply to video file] summarise the video file.
     """
     prompt = message.input
     reply = message.replied
-    message_response = await message.reply("processing... this may take a while")
+    message_response = await message.reply("...")
 
     if not (prompt and reply and reply.video):
         await message_response.edit("Reply to a video and give a prompt.")
