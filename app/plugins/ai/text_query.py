@@ -9,6 +9,7 @@ from pyrogram.enums import ParseMode
 
 from app import BOT, Convo, Message, bot, Config
 from google.ai import generativelanguage as glm
+import google.generativeai as genai
 from app.plugins.ai.models import TEXT_MODEL, MEDIA_MODEL, IMAGE_MODEL, basic_check, get_response_text, SAFETY_SETTINGS, GENERATION_CONFIG
 
 PAST = "Implore me to update context with _pas."
@@ -34,7 +35,7 @@ async def fetch_history(bot=bot, message=None):
     else:
         CONTEXT = HISTORY
 
-ONEFIVE = glm.GenerativeModel(
+ONEFIVE = genai.GenerativeModel(
     model_name="gemini-1.5-pro-latest",
     generation_config=GENERATION_CONFIG,
     system_instruction=CONTEXT,
@@ -217,7 +218,7 @@ async def reya(bot: BOT, message: Message):
 
     elif replied and (replied.audio or replied.voice):
         file = await replied.download()
-        audio_file = glm.upload_file(path = file, display_name="Voice Note")
+        audio_file = genai.upload_file(path = file, display_name="Voice Note")
     
 
         response = await ONEFIVE.generate_content_async([ message.input, audio_file])
