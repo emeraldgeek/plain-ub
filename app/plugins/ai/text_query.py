@@ -8,7 +8,7 @@ from pyrogram import filters
 from pyrogram.enums import ParseMode
 
 from app import BOT, Convo, Message, bot, Config
-from app.plugins.ai.models import TEXT_MODEL, MEDIA_MODEL, ONEFIVE, basic_check, get_response_text
+from app.plugins.ai.models import TEXT_MODEL, MEDIA_MODEL, IMAGE_MODEL, ONEFIVE, basic_check, get_response_text
 
 
 @bot.add_cmd(cmd="ai")
@@ -183,7 +183,7 @@ async def reya(bot: BOT, message: Message):
             response = convo.send_message([message.input, image_blob])
             
         else:
-            response = await VISION_MODEL.generate_content_async([prompt, image_blob])
+            response = await IMAGE_MODEL.generate_content_async([prompt, image_blob])
 
     elif replied and (replied.audio or replied.voice):
         file = await replied.download()
