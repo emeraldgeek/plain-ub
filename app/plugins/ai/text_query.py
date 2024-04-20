@@ -8,6 +8,7 @@ from pyrogram import filters
 from pyrogram.enums import ParseMode
 
 from app import BOT, Convo, Message, bot, Config
+from google.ai import generativelanguage as glm
 from app.plugins.ai.models import TEXT_MODEL, MEDIA_MODEL, IMAGE_MODEL, ONEFIVE, basic_check, get_response_text
 
 
@@ -24,7 +25,7 @@ async def question(bot: BOT, message: Message):
 
     prompt = message.input
 
-    response = await MEDIA_MODEL.generate_content_async(prompt)
+    response = await ONEFIVE.generate_content_async(prompt)
 
     response_text = get_response_text(response)
 
