@@ -1,5 +1,6 @@
 import google.generativeai as genai
-
+import os
+import json
 from app import Message, extra_config, Config, bot
 
 
