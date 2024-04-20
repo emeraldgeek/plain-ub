@@ -1,6 +1,6 @@
 import google.generativeai as genai
 
-from app import Message, extra_config, Config
+from app import Message, extra_config, Config, bot
 
 
 async def init_task():
