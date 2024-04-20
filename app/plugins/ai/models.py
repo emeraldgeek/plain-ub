@@ -1,7 +1,5 @@
 import google.generativeai as genai
-import os
-import json
-from app import Message, extra_config, Config, bot
+from app import Message, extra_config
 
 
 async def init_task():
@@ -18,29 +16,6 @@ SAFETY_SETTINGS = [
     {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
 ]
 
-PAST = "Implore me to update context with _fh."
-HISTORY = "Implore me to update context with _fh."
-SPECIFIC_GROUP_ID = [-1001898736703, -1002010754513, -1001939171299]
-CONTEXT = "Implore me to update context with _fh."
-
-@bot.add_cmd(cmd="fh")
-async def fetch_history(bot=bot, message=None):
-    history_message_id = int(os.environ.get("HISTORY_MESSAGE_ID"))
-    past_message_id = int(os.environ.get("PAST_MESSAGE_ID"))
-    history_message, past_message = await bot.get_messages(
-        chat_id=Config.LOG_CHAT, message_ids=[history_message_id, past_message_id]
-    )
-    global HISTORY
-    HISTORY = json.loads(history_message.text)
-    global PAST
-    PAST = json.loads(past_message.text)
-    if message is not None:
-        await message.reply("Done.")
-    if message.chat.id in SPECIFIC_GROUP_ID:
-        CONTEXT = PAST
-    else:
-        CONTEXT = HISTORY
-
 TEXT_MODEL = genai.GenerativeModel(
     model_name="gemini-pro",
     generation_config=GENERATION_CONFIG,
@@ -56,13 +31,6 @@ IMAGE_MODEL = genai.GenerativeModel(
 MEDIA_MODEL = genai.GenerativeModel(
     model_name="gemini-1.5-pro-latest",
     generation_config=GENERATION_CONFIG,
-    safety_settings=SAFETY_SETTINGS,
-)
-
-ONEFIVE = genai.GenerativeModel(
-    model_name="gemini-1.5-pro-latest",
-    generation_config=GENERATION_CONFIG,
-    system_instruction=CONTEXT,
     safety_settings=SAFETY_SETTINGS,
 )
 
