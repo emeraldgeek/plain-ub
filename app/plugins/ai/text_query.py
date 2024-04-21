@@ -29,21 +29,6 @@ async def fetch_history(bot=bot, message=None):
     PAST = json.loads(past_message.text)
     if message is not None:
         await message.reply("Done.")
-    global ONEFIVE
-    if message.chat.id in SPECIFIC_GROUP_ID:
-        ONEFIVE = genai.GenerativeModel(
-        model_name="gemini-1.5-pro-latest",
-        generation_config=GENERATION_CONFIG,
-        system_instruction=PAST,
-        safety_settings=SAFETY_SETTINGS,
-        )
-    else:
-        ONEFIVE = genai.GenerativeModel(
-        model_name="gemini-1.5-pro-latest",
-        generation_config=GENERATION_CONFIG,
-        system_instruction=HISTORY,
-        safety_settings=SAFETY_SETTINGS,
-        )
 
 @bot.add_cmd(cmd="ai")
 async def question(bot: BOT, message: Message):
@@ -58,7 +43,7 @@ async def question(bot: BOT, message: Message):
 
     prompt = message.input
 
-    response = await ONEFIVE.generate_content_async(prompt)
+    response = await TEXT_MODEL.generate_content_async(prompt)
 
     response_text = get_response_text(response)
 
@@ -89,7 +74,21 @@ async def ai_chat(bot: BOT, message: Message):
     """
     if not await basic_check(message):
         return
-    MODEL= ONEFIVE if message.cmd == "rxc" else TEXT_MODEL
+    if message.chat.id in SPECIFIC_GROUP_ID:
+        onefive = genai.GenerativeModel(
+        model_name="gemini-1.5-pro-latest",
+        generation_config=GENERATION_CONFIG,
+        system_instruction=PAST,
+        safety_settings=SAFETY_SETTINGS,
+        )
+    else:
+        onefive = genai.GenerativeModel(
+        model_name="gemini-1.5-pro-latest",
+        generation_config=GENERATION_CONFIG,
+        system_instruction=HISTORY,
+        safety_settings=SAFETY_SETTINGS,
+        )
+    MODEL= onefive if message.cmd == "rxc" else TEXT_MODEL
     chat = MODEL.start_chat(history=[])
     try:
         await do_convo(chat=chat, message=message)
@@ -107,6 +106,20 @@ async def history_chat(bot: BOT, message: Message):
     """
     if not await basic_check(message):
         return
+    if message.chat.id in SPECIFIC_GROUP_ID:
+        onefive = genai.GenerativeModel(
+        model_name="gemini-1.5-pro-latest",
+        generation_config=GENERATION_CONFIG,
+        system_instruction=PAST,
+        safety_settings=SAFETY_SETTINGS,
+        )
+    else:
+        onefive = genai.GenerativeModel(
+        model_name="gemini-1.5-pro-latest",
+        generation_config=GENERATION_CONFIG,
+        system_instruction=HISTORY,
+        safety_settings=SAFETY_SETTINGS,
+        )
     reply = message.replied
     if (
         not reply
@@ -120,7 +133,7 @@ async def history_chat(bot: BOT, message: Message):
     doc: BytesIO = (await reply.download(in_memory=True)).getbuffer()  # NOQA
     history = pickle.loads(doc)
     await resp.edit("<i>History Loaded... Resuming chat</i>")
-    MODEL= ONEFIVE if message.cmd == "lxc" else TEXT_MODEL
+    MODEL= onefive if message.cmd == "lxc" else TEXT_MODEL
     chat = MODEL.start_chat(history=history)
     try:
         await do_convo(chat=chat, message=message, history=True)
@@ -184,7 +197,21 @@ async def reya(bot: BOT, message: Message):
     """
     if not (await basic_check(message)):  # fmt:skip
         return
-    MODEL = MEDIA_MODEL if message.cmd == "r" else ONEFIVE
+    if message.chat.id in SPECIFIC_GROUP_ID:
+        onefive = genai.GenerativeModel(
+        model_name="gemini-1.5-pro-latest",
+        generation_config=GENERATION_CONFIG,
+        system_instruction=PAST,
+        safety_settings=SAFETY_SETTINGS,
+        )
+    else:
+        onefive = genai.GenerativeModel(
+        model_name="gemini-1.5-pro-latest",
+        generation_config=GENERATION_CONFIG,
+        system_instruction=HISTORY,
+        safety_settings=SAFETY_SETTINGS,
+        )
+    MODEL = MEDIA_MODEL if message.cmd == "r" else onefive
     name = "Leaf"
     replied = message.replied
 
