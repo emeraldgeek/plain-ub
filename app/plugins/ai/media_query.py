@@ -70,7 +70,7 @@ async def audio_to_text(bot: BOT, message: Message):
     INFO: Convert Audio files to text.
     USAGE: .ts [reply to audio file] summarise/transcribe the audio file.
     """
-    prompt = "Transcribe in Hinglish."
+    prompt = f"{message.input}, this audio file"
     reply = message.replied
     audio = reply.audio or reply.voice
 
