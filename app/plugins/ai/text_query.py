@@ -12,8 +12,6 @@ from google.ai import generativelanguage as glm
 import google.generativeai as genai
 from app.plugins.ai.models import TEXT_MODEL, MEDIA_MODEL, IMAGE_MODEL, basic_check, get_response_text, SAFETY_SETTINGS, GENERATION_CONFIG
 
-PAST = "Implore me to update context with _pas."
-HISTORY = "Implore me to update context with _his."
 SPECIFIC_GROUP_ID = [-1001898736703, -1002010754513, -1001939171299]
 
 @bot.add_cmd(cmd="fh")
@@ -23,26 +21,30 @@ async def fetch_history(bot=bot, message=None):
     history_message, past_message = await bot.get_messages(
         chat_id=Config.LOG_CHAT, message_ids=[history_message_id, past_message_id]
     )
-    global HISTORY
-    HISTORY = json.loads(history_message.text)
-    global PAST
-    PAST = json.loads(past_message.text)
+    
+    history = json.loads(history_message.text)
+    
+    global MHIST
+    MHIST = genai.GenerativeModel(
+    model_name="gemini-1.5-pro-latest",
+    generation_config=GENERATION_CONFIG,
+    system_instruction=history,
+    safety_settings=SAFETY_SETTINGS,
+    )
+    
+    past = json.loads(past_message.text)
+    
+    global MPAST
+    MPAST = genai.GenerativeModel(
+    model_name="gemini-1.5-pro-latest",
+    generation_config=GENERATION_CONFIG,
+    system_instruction=past,
+    safety_settings=SAFETY_SETTINGS,
+    )
+    
     if message is not None:
         await message.reply("Done.")
 
-MPAST = genai.GenerativeModel(
-model_name="gemini-1.5-pro-latest",
-generation_config=GENERATION_CONFIG,
-system_instruction=PAST,
-safety_settings=SAFETY_SETTINGS,
-)
-
-MHIST = genai.GenerativeModel(
-model_name="gemini-1.5-pro-latest",
-generation_config=GENERATION_CONFIG,
-system_instruction=HISTORY,
-safety_settings=SAFETY_SETTINGS,
-)
 
 @bot.add_cmd(cmd="ai")
 async def question(bot: BOT, message: Message):
