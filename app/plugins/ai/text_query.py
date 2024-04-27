@@ -30,6 +30,20 @@ async def fetch_history(bot=bot, message=None):
     if message is not None:
         await message.reply("Done.")
 
+MPAST = genai.GenerativeModel(
+model_name="gemini-1.5-pro-latest",
+generation_config=GENERATION_CONFIG,
+system_instruction=PAST,
+safety_settings=SAFETY_SETTINGS,
+)
+
+MHIST = genai.GenerativeModel(
+model_name="gemini-1.5-pro-latest",
+generation_config=GENERATION_CONFIG,
+system_instruction=HISTORY,
+safety_settings=SAFETY_SETTINGS,
+)
+
 @bot.add_cmd(cmd="ai")
 async def question(bot: BOT, message: Message):
     """
@@ -41,24 +55,36 @@ async def question(bot: BOT, message: Message):
     if not await basic_check(message):
         return
 
-    prompt = message.input
+    if replied and replied.photo:
+        file = await replied.download(in_memory=True)
 
-    response = await TEXT_MODEL.generate_content_async(prompt)
+        mime_type, _ = mimetypes.guess_type(file.name)
+        if mime_type is None:
+            mime_type = "image/unknown"
 
-    response_text = get_response_text(response)
-
-    if not isinstance(message, Message):
-        await message.edit(
-            text=f"```\n{prompt}```**AI**:\n{response_text.strip()}",
-            parse_mode=ParseMode.MARKDOWN,
+        image_blob = glm.Blob(mime_type=mime_type, data=file.getvalue())
+        prompt = (
+            f"Now, about the image : {message.input}"
         )
+
+        response = await IMAGE_MODEL.generate_content_async([prompt, image_blob])
+
     else:
-        await bot.send_message(
-            chat_id=message.chat.id,
-            text=f"```\n{prompt}```**AI**:\n{response_text.strip()}",
-            parse_mode=ParseMode.MARKDOWN,
-            reply_to_message_id=message.reply_id or message.id,
-        )
+        prompt = message.input
+        response = await TEXT_MODEL.generate_content_async(prompt)
+        response_text = get_response_text(response)
+        if not isinstance(message, Message):
+            await message.edit(
+                text=f"```\n{prompt}```**AI**:\n{response_text.strip()}",
+                parse_mode=ParseMode.MARKDOWN,
+            )
+        else:
+            await bot.send_message(
+                chat_id=message.chat.id,
+                text=f"```\n{prompt}```**AI**:\n{response_text.strip()}",
+                parse_mode=ParseMode.MARKDOWN,
+                reply_to_message_id=message.reply_id or message.id,
+            )
 
 
 @bot.add_cmd(cmd=["aichat", "rxc"])
@@ -75,19 +101,9 @@ async def ai_chat(bot: BOT, message: Message):
     if not await basic_check(message):
         return
     if message.chat.id in SPECIFIC_GROUP_ID:
-        onefive = genai.GenerativeModel(
-        model_name="gemini-1.5-pro-latest",
-        generation_config=GENERATION_CONFIG,
-        system_instruction=PAST,
-        safety_settings=SAFETY_SETTINGS,
-        )
+        onefive = MPAST
     else:
-        onefive = genai.GenerativeModel(
-        model_name="gemini-1.5-pro-latest",
-        generation_config=GENERATION_CONFIG,
-        system_instruction=HISTORY,
-        safety_settings=SAFETY_SETTINGS,
-        )
+        onefive = MHIST
     MODEL= onefive if message.cmd == "rxc" else TEXT_MODEL
     chat = MODEL.start_chat(history=[])
     try:
@@ -107,19 +123,9 @@ async def history_chat(bot: BOT, message: Message):
     if not await basic_check(message):
         return
     if message.chat.id in SPECIFIC_GROUP_ID:
-        onefive = genai.GenerativeModel(
-        model_name="gemini-1.5-pro-latest",
-        generation_config=GENERATION_CONFIG,
-        system_instruction=PAST,
-        safety_settings=SAFETY_SETTINGS,
-        )
+        onefive = MPAST
     else:
-        onefive = genai.GenerativeModel(
-        model_name="gemini-1.5-pro-latest",
-        generation_config=GENERATION_CONFIG,
-        system_instruction=HISTORY,
-        safety_settings=SAFETY_SETTINGS,
-        )
+        onefive = MHIST
     reply = message.replied
     if (
         not reply
@@ -143,6 +149,7 @@ async def history_chat(bot: BOT, message: Message):
 
 async def do_convo(chat, message: Message, history: bool = False):
     prompt = message.input
+    name = message.from_user.first_name
     reply_to_message_id = message.id
     async with Convo(
         client=message._client,
@@ -198,19 +205,9 @@ async def reya(bot: BOT, message: Message):
     if not (await basic_check(message)):  # fmt:skip
         return
     if message.chat.id in SPECIFIC_GROUP_ID:
-        onefive = genai.GenerativeModel(
-        model_name="gemini-1.5-pro-latest",
-        generation_config=GENERATION_CONFIG,
-        system_instruction=PAST,
-        safety_settings=SAFETY_SETTINGS,
-        )
+        onefive = MPAST
     else:
-        onefive = genai.GenerativeModel(
-        model_name="gemini-1.5-pro-latest",
-        generation_config=GENERATION_CONFIG,
-        system_instruction=HISTORY,
-        safety_settings=SAFETY_SETTINGS,
-        )
+        onefive = MHIST
     MODEL = MEDIA_MODEL if message.cmd == "r" else onefive
     name = "Leaf"
     replied = message.replied
@@ -235,23 +232,16 @@ async def reya(bot: BOT, message: Message):
 
         image_blob = glm.Blob(mime_type=mime_type, data=file.getvalue())
         prompt = (
-            REYA_INSTRUCTIONS
-            + f"Now, about the image : {message.input}"
+            f"Now, about the image : {message.input}"
         )
 
-        if message.cmd == "rx":
-            convo = ONEFIVE.start_chat(history=[])
-            response = convo.send_message([message.input, image_blob])
-            
-        else:
-            response = await IMAGE_MODEL.generate_content_async([prompt, image_blob])
+        convo = MODEL.start_chat(history=[])
+        response = convo.send_message([message.input, image_blob])
 
     elif replied and (replied.audio or replied.voice):
         file = await replied.download()
         audio_file = genai.upload_file(path = file, display_name="Voice Note")
-    
-
-        response = await ONEFIVE.generate_content_async([ message.input, audio_file])
+        response = await MODEL.generate_content_async([ message.input, audio_file])
         response_text = response.text
         await bot.send_message(
             chat_id=message.chat.id,
@@ -263,11 +253,10 @@ async def reya(bot: BOT, message: Message):
     else:
         convo = MODEL.start_chat(history=[])
         response = convo.send_message(prompt)
-
-    response_text = get_response_text(response)
-    await bot.send_message(
-        chat_id=message.chat.id,
-        text = response_text,
-        parse_mode=ParseMode.MARKDOWN,
-        reply_to_message_id=message.reply_id or message.id,
-    )
+        response_text = get_response_text(response)
+        await bot.send_message(
+            chat_id=message.chat.id,
+            text = response_text,
+            parse_mode=ParseMode.MARKDOWN,
+            reply_to_message_id=message.reply_id or message.id,
+        )
