@@ -51,7 +51,7 @@ async def photo_query(bot: BOT, message: Message):
     INFO: Ask a question to Gemini AI about replied image.
     USAGE: .ocr [reply to a photo] OCR the image.
     """
-    prompt = "Write the text."
+    prompt = "Write the text with good formatting."
     reply = message.replied
     message_response = await message.reply("...")
 
@@ -112,7 +112,7 @@ async def handle_document(bot: BOT, message: Message):
     prompt = message.input
     reply = message.replied
     document = reply.document
-    message_response = await message.reply("processing... this may take a while")
+    message_response = await message.reply("...")
 
     if not (prompt and reply and document):
         await message_response.edit("Reply to a document and give a prompt.")
