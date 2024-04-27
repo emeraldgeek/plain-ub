@@ -4,5 +4,5 @@ git+https://github.com/mosS-Green/ub-core@dual_mode
 yt-dlp
 pillow
 google-generativeai
--U g4f[all]
+g4f[all]
 
