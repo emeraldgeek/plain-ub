@@ -1,4 +1,5 @@
 from app import bot, Message
+from pyrogram.enums import ParseMode
 from g4f.client import Client
 from g4f.Provider import MetaAI, Liaobots
 
@@ -15,7 +16,7 @@ async def llama(bot, message: Message):
 
     await bot.send_message(
                 chat_id=message.chat.id,
-                text = response.choices[0].message.content,
+                text = f"llama: {response.choices[0].message.content}",
                 parse_mode=ParseMode.MARKDOWN,
                 reply_to_message_id=message.reply_id or message.id,
             )
@@ -33,7 +34,7 @@ async def gpt(bot, message: Message):
 
     await bot.send_message(
                 chat_id=message.chat.id,
-                text = response.choices[0].message.content,
+                text = f"gpt4: {response.choices[0].message.content}",
                 parse_mode=ParseMode.MARKDOWN,
                 reply_to_message_id=message.reply_id or message.id,
             )
