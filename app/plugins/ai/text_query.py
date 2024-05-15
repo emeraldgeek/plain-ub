@@ -26,7 +26,7 @@ async def fetch_history(bot=bot, message=None):
     
     global MHIST
     MHIST = genai.GenerativeModel(
-    model_name="gemini-1.5-pro-latest",
+    model_name="gemini-1.5-flash-latest",
     generation_config=GENERATION_CONFIG,
     system_instruction=history,
     safety_settings=SAFETY_SETTINGS,
@@ -36,7 +36,7 @@ async def fetch_history(bot=bot, message=None):
     
     global MPAST
     MPAST = genai.GenerativeModel(
-    model_name="gemini-1.5-pro-latest",
+    model_name="gemini-1.5-flash-latest",
     generation_config=GENERATION_CONFIG,
     system_instruction=past,
     safety_settings=SAFETY_SETTINGS,
@@ -106,7 +106,7 @@ async def ai_chat(bot: BOT, message: Message):
         onefive = MPAST
     else:
         onefive = MHIST
-    MODEL= onefive if message.cmd == "rxc" else TEXT_MODEL
+    MODEL = onefive if message.cmd == "rxc" else TEXT_MODEL
     chat = MODEL.start_chat(history=[])
     try:
         await do_convo(chat=chat, message=message)
@@ -258,7 +258,7 @@ async def reya(bot: BOT, message: Message):
         response_text = get_response_text(response)
         await bot.send_message(
             chat_id=message.chat.id,
-            text = response_text,
+            text = f"Reya : {response_text}",
             parse_mode=ParseMode.MARKDOWN,
             reply_to_message_id=message.reply_id or message.id,
         )
