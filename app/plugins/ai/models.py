@@ -16,12 +16,6 @@ SAFETY_SETTINGS = [
     {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
 ]
 
-TEXT_MODEL = genai.GenerativeModel(
-    model_name="gemini-pro",
-    generation_config=GENERATION_CONFIG,
-    safety_settings=SAFETY_SETTINGS,
-)
-
 IMAGE_MODEL = genai.GenerativeModel(
     model_name="gemini-pro-vision",
     generation_config=GENERATION_CONFIG,
@@ -29,10 +23,12 @@ IMAGE_MODEL = genai.GenerativeModel(
 )
 
 MEDIA_MODEL = genai.GenerativeModel(
-    model_name="gemini-1.5-pro-latest",
+    model_name="gemini-1.5-flash-latest",
     generation_config=GENERATION_CONFIG,
     safety_settings=SAFETY_SETTINGS,
 )
+
+TEXT_MODEL = MEDIA_MODEL
 
 async def basic_check(message: Message):
     if not extra_config.GEMINI_API_KEY:
