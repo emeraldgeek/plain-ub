@@ -12,6 +12,8 @@ from google.ai import generativelanguage as glm
 import google.generativeai as genai
 from app.plugins.ai.models import TEXT_MODEL, MEDIA_MODEL, IMAGE_MODEL, basic_check, get_response_text, SAFETY_SETTINGS, GENERATION_CONFIG
 
+CONVO_CACHE: dict[str, Convo] = {}
+
 SPECIFIC_GROUP_ID = [-1001898736703, -1002010754513, -1001939171299]
 
 @bot.add_cmd(cmd="fh")
@@ -108,10 +110,7 @@ async def ai_chat(bot: BOT, message: Message):
         onefive = MHIST
     MODEL = onefive if message.cmd == "rxc" else TEXT_MODEL
     chat = MODEL.start_chat(history=[])
-    try:
-        await do_convo(chat=chat, message=message)
-    except TimeoutError:
-        await export_history(chat, message)
+    await do_convo(chat=chat, message=message)
 
 
 @bot.add_cmd(cmd=["load_history", "lxc"])
@@ -129,6 +128,7 @@ async def history_chat(bot: BOT, message: Message):
     else:
         onefive = MHIST
     reply = message.replied
+    
     if (
         not reply
         or not reply.document
@@ -137,40 +137,53 @@ async def history_chat(bot: BOT, message: Message):
     ):
         await message.reply("Reply to a Valid History file.")
         return
+        
     resp = await message.reply("<i>Loading History...</i>")
     doc: BytesIO = (await reply.download(in_memory=True)).getbuffer()  # NOQA
     history = pickle.loads(doc)
     await resp.edit("<i>History Loaded... Resuming chat</i>")
     MODEL= onefive if message.cmd == "lxc" else TEXT_MODEL
     chat = MODEL.start_chat(history=history)
-    try:
-        await do_convo(chat=chat, message=message, history=True)
-    except TimeoutError:
-        await export_history(chat, message)
+    await do_convo(chat=chat, message=message)
 
 
-async def do_convo(chat, message: Message, history: bool = False):
+async def do_convo(chat, message: Message):
     prompt = message.input
     name = message.from_user.first_name
     reply_to_message_id = message.id
-    async with Convo(
+
+    old_convo = CONVO_CACHE.get(message.unique_chat_user_id)
+
+    if old_convo:
+        Convo.CONVO_DICT[message.chat.id].remove(old_convo)
+
+    convo_obj = Convo(
         client=message._client,
         chat_id=message.chat.id,
         filters=generate_filter(message),
         timeout=180,
         check_for_duplicates=False,
-    ) as convo:
-        while True:
-            ai_response = await chat.send_message_async(prompt)
-            ai_response_text = get_response_text(ai_response)
-            text = f"{ai_response_text}"
-            _, prompt_message = await convo.send_message(
-                text=text,
-                reply_to_message_id=reply_to_message_id,
-                parse_mode=ParseMode.MARKDOWN,
-                get_response=True,
-            )
-            prompt, reply_to_message_id = prompt_message.text, prompt_message.id
+    )
+
+    CONVO_CACHE[message.unique_chat_user_id] = convo_obj
+
+    try:
+        async with convo_obj:
+            while True:
+                ai_response = await chat.send_message_async(prompt)
+                ai_response_text = get_response_text(ai_response)
+                text = ai_response_text
+                _, prompt_message = await convo_obj.send_message(
+                    text=text,
+                    reply_to_message_id=reply_to_message_id,
+                    parse_mode=ParseMode.MARKDOWN,
+                    get_response=True,
+                )
+                prompt, reply_to_message_id = prompt_message.text, prompt_message.id
+    except TimeoutError:
+        await export_history(chat, message)
+
+    CONVO_CACHE.pop(message.unique_chat_user_id, 0)
 
 
 def generate_filter(message: Message):
