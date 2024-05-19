@@ -39,7 +39,7 @@ async def gpt(bot, message: Message):
                 reply_to_message_id=message.reply_id or message.id,
             )
 
-bot.add_cmd(cmd="cl")
+@bot.add_cmd(cmd="cl")
 async def claude(bot, message: Message):
     client = Client(
     provider = Liaobots
