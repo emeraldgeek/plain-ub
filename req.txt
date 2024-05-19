@@ -1,7 +1,6 @@
 # BoilerPlate Code for UB
-git+https://github.com/mosS-Green/ub-core@dual_mode
+git+https://github.com/thedragonsinn/ub-core@dual_mode
 
 yt-dlp>=2024.4.9
 pillow
 google-generativeai
-g4f[all]
