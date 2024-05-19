@@ -28,13 +28,31 @@ async def gpt(bot, message: Message):
     )
 
     response = client.chat.completions.create(
-        model="gpt-4-turbo",
+        model="gpt-4o",
         messages=[{"role": "user", "content": message.input }],
     )
 
     await bot.send_message(
                 chat_id=message.chat.id,
                 text = f"gpt4: {response.choices[0].message.content}",
+                parse_mode=ParseMode.MARKDOWN,
+                reply_to_message_id=message.reply_id or message.id,
+            )
+
+bot.add_cmd(cmd="cl")
+async def claude(bot, message: Message):
+    client = Client(
+    provider = Liaobots
+)
+
+    response = client.chat.completions.create(
+        model="claude-3-opus-20240229",
+        messages=[{"role": "user", "content": message.input }],
+    )
+
+    await bot.send_message(
+                chat_id=message.chat.id,
+                text = f"Claude: {response.choices[0].message.content}",
                 parse_mode=ParseMode.MARKDOWN,
                 reply_to_message_id=message.reply_id or message.id,
             )
