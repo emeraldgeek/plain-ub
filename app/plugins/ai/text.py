@@ -11,6 +11,7 @@ from app import BOT, Convo, Message, bot, Config
 from google.ai import generativelanguage as glm
 import google.generativeai as genai
 from app.plugins.ai.models import TEXT_MODEL, MEDIA_MODEL, IMAGE_MODEL, basic_check, get_response_text, SAFETY_SETTINGS, GENERATION_CONFIG
+from app.plugins.ai.mesia import handle_photo, handle_audio
 
 CONVO_CACHE: dict[str, Convo] = {}
 
@@ -91,7 +92,7 @@ async def question(bot: BOT, message: Message):
             )
 
 
-@bot.add_cmd(cmd=["aichat", "rxc"])
+@bot.add_cmd(cmd=["aichat", "axc"])
 async def ai_chat(bot: BOT, message: Message):
     """
     CMD: AICHAT
@@ -108,7 +109,7 @@ async def ai_chat(bot: BOT, message: Message):
         onefive = MPAST
     else:
         onefive = MHIST
-    MODEL = onefive if message.cmd == "rxc" else TEXT_MODEL
+    MODEL = onefive if message.cmd == "axc" else TEXT_MODEL
     chat = MODEL.start_chat(history=[])
     await do_convo(chat=chat, message=message)
 
@@ -210,11 +211,11 @@ async def export_history(chat, message: Message):
     )
     await bot.send_document(chat_id=message.from_user.id, document=doc, caption=caption)
 
-@bot.add_cmd(cmd=["r","rx"])
-async def reya(bot: BOT, message: Message):
+@bot.add_cmd(cmd=["a","ax"])
+async def Aely(bot: BOT, message: Message):
     """
     CMD: R
-    INFO: Ask a question to Reya.
+    INFO: Ask a question to Aely.
     USAGE: .r How to be strong?
     """
     if not (await basic_check(message)):  # fmt:skip
@@ -223,7 +224,7 @@ async def reya(bot: BOT, message: Message):
         onefive = MPAST
     else:
         onefive = MHIST
-    MODEL = MEDIA_MODEL if message.cmd == "r" else onefive
+    MODEL = MEDIA_MODEL if message.cmd == "a" else onefive
     name = "Leaf"
     replied = message.replied
 
@@ -239,39 +240,28 @@ async def reya(bot: BOT, message: Message):
         prompt = f"{name}: {message.input}"
 
     if replied and replied.photo:
-        file = await replied.download(in_memory=True)
+        imgprmpt = message.input
+        reply = message.replied
+        message_response = await message.reply("...")
 
-        mime_type, _ = mimetypes.guess_type(file.name)
-        if mime_type is None:
-            mime_type = "image/unknown"
-
-        image_blob = glm.Blob(mime_type=mime_type, data=file.getvalue())
-        prompt = (
-            f"Now, about the image : {message.input}"
-        )
-
-        convo = MODEL.start_chat(history=[])
-        response = convo.send_message([message.input, image_blob])
-
+        ai_response_text = await handle_photo(imgprmpt, reply)
+        await message_response.edit(ai_response_text)
+    
     elif replied and (replied.audio or replied.voice):
-        file = await replied.download()
-        audio_file = genai.upload_file(path = file, display_name="Voice Note")
-        response = await MODEL.generate_content_async([ message.input, audio_file])
-        response_text = response.text
-        await bot.send_message(
-            chat_id=message.chat.id,
-            text=response_text,
-            parse_mode=ParseMode.MARKDOWN,
-            reply_to_message_id=message.id,
-        )
+        audprmpt = message.input
+        reply = message.replied
+        message_response = await message.reply("...")
+
+        ai_response_text = await handle_audio(audprmpt, reply)
+        await message_response.edit(ai_response_text)
 
     else:
         convo = MODEL.start_chat(history=[])
         response = convo.send_message(prompt)
         response_text = get_response_text(response)
         await bot.send_message(
-            chat_id=message.chat.id,
-            text = f"Reya : {response_text}",
-            parse_mode=ParseMode.MARKDOWN,
-            reply_to_message_id=message.reply_id or message.id,
+            chat_id = message.chat.id,
+            text = response_text,
+            parse_mode = ParseMode.MARKDOWN,
+            reply_to_message_id = message.reply_id or message.id,
         )
