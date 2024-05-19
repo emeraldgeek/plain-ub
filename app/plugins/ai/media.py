@@ -51,7 +51,7 @@ async def photo_query(bot: BOT, message: Message):
     INFO: Ask a question to Gemini AI about replied image.
     USAGE: .ocr [reply to a photo] OCR the image.
     """
-    prompt = "Write the text with good formatting."
+    prompt = "OCR the text with good formatting."
     reply = message.replied
     message_response = await message.reply("...")
 
