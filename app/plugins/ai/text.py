@@ -11,7 +11,7 @@ from app import BOT, Convo, Message, bot, Config
 from google.ai import generativelanguage as glm
 import google.generativeai as genai
 from app.plugins.ai.models import TEXT_MODEL, MEDIA_MODEL, IMAGE_MODEL, basic_check, get_response_text, SAFETY_SETTINGS, GENERATION_CONFIG
-from app.plugins.ai.mesia import handle_photo, handle_audio
+from app.plugins.ai.media import handle_photo, handle_audio
 
 CONVO_CACHE: dict[str, Convo] = {}
 
