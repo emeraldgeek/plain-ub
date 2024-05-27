@@ -260,6 +260,7 @@ async def reya(bot: BOT, message: Message):
         response = convo.send_message(prompt)
         response_text = get_response_text(response)
         await bot.send_message(
+            chat_id=message.chat.id,
             text = response_text,
             parse_mode=ParseMode.MARKDOWN,
             reply_to_message_id=message.reply_id or message.id,
