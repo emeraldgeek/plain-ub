@@ -16,9 +16,8 @@ async def llama(bot, message: Message):
         messages=[{"role": "user", "content": message.input }],
     )
 
-    await bot.send_message(
-                text = f"llama: {response.choices[0].message.content}",
-                reply_to_message_id=message.reply_id or message.id,
+    await message.reply(
+                text = f"llama: {response.choices[0].message.content}"
             )
 
 @bot.add_cmd(cmd="gpt")
@@ -32,9 +31,8 @@ async def gpt(bot, message: Message):
         messages=[{"role": "user", "content": message.input }],
     )
 
-    await bot.send_message(
-                text = f"4o: {response.choices[0].message.content}",
-                reply_to_message_id=message.reply_id or message.id,
+    await message.reply(
+                text = f"4o: {response.choices[0].message.content}"
             )
 
 @bot.add_cmd(cmd="cl")
@@ -48,7 +46,6 @@ async def claude(bot, message: Message):
         messages=[{"role": "user", "content": message.input }],
     )
 
-    await bot.send_message(
-                text = f"Claude: {response.choices[0].message.content}",
-                reply_to_message_id=message.reply_id or message.id,
+    await message.reply(
+                text = f"Claude: {response.choices[0].message.content}"
             )
