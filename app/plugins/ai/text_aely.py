@@ -244,7 +244,7 @@ async def Aely(bot: BOT, message: Message):
         reply = message.replied
         message_response = await message.reply("...")
 
-        file = await message.download(in_memory=True)
+        file = await reply.download(in_memory=True)
 
         mime_type, _ = mimetypes.guess_type(file.name)
         if mime_type is None:
