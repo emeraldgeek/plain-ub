@@ -179,7 +179,7 @@ async def handle_photo(prompt: str, message: Message):
         mime_type = "image/unknown"
 
     image_blob = glm.Blob(mime_type=mime_type, data=file.getvalue())
-    response = await IMAGE_MODEL.generate_content_async([prompt, image_blob])
+    response = await MEDIA_MODEL.generate_content_async([prompt, image_blob])
     return get_response_text(response)
 
 
