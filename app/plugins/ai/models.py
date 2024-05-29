@@ -7,7 +7,7 @@ async def init_task():
         genai.configure(api_key=extra_config.GEMINI_API_KEY)
 
 
-GENERATION_CONFIG = {"temperature": 0.75, "max_output_tokens": 3096}
+GENERATION_CONFIG = {"temperature": 0.79, "max_output_tokens": 3096}
 
 SAFETY_SETTINGS = [
     {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
